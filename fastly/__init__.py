@@ -967,7 +967,71 @@ class FastlyConnection(object):
 	def delete_version(self, service_id, version_number):
 		content = self._fetch("/service/%s/version/%d" % (service_id, version_number), method="DELETE")
 		return self._status(content)
-	
+
+	# ACL related methods
+	def get_acl(self, service_id, version_number, name):
+		content = self._fetch("/service/{}/version/{}/acl/{}".format(service_id, version_number, name))
+		return FastlyACL(self, content)
+
+	def create_acl(self, service_id, version_number, name):
+		body = self._formdata({
+			"name": name,
+		}, ["name"])
+
+		content = self._fetch("/service/{}/version/{}/acl".format(service_id, version_number), method="POST", body=body)
+		return FastlyACL(self, content)
+
+	def create_acl_entry(self, service_id, acl_id, ip, subnet=None):
+		body = self._formdata({
+			"ip": ip,
+			"subnet": subnet,
+		}, ["ip", "subnet"])
+
+		content = self._fetch("/service/{}/acl/{}/entry".format(service_id, acl_id), method="POST", body=body)
+		return FastlyACLEntry(self, content)
+
+	def get_acl_entries(self, service_id, acl_id):
+		content = self._fetch("/service/{}/acl/{}/entries".format(service_id, acl_id))
+		result = []
+		for el in content:
+			result.append(FastlyACLEntry(self, el))
+
+		return result
+
+	def delete_acl_entry(self, service_id, acl_id, id):
+		content = self._fetch("/service/{}/acl/{}/entry/{}".format(service_id, acl_id, id), method="DELETE")
+		return self._status(content)
+
+	# Dictionary related methods
+	def get_dic(self, service_id, version_number, name):
+		content = self._fetch("/service/{}/version/{}/dictionary/{}".format(service_id, version_number, name))
+		return FastlyDictionary(self, content)
+
+	def create_dic(self, service_id, version_number, name):
+		body = self._formdata({
+			"name": name,
+		}, ["name"])
+
+		content = self._fetch("/service/{}/version/{}/dictionary".format(service_id, version_number), method="POST", body=body)
+		return FastlyDictionary(self, content)
+
+	def create_dic_item(self, service_id, dic_id, key, value):
+		body = self._formdata({
+			"item_key": key,
+			"item_value": value,
+		}, ["item_key", "item_value"])
+
+		content = self._fetch("/service/{}/dictionary/{}/item".format(service_id, dic_id), method="POST", body=body)
+		return FastlyDictionaryItem(self, content)
+
+	def get_dic_item(self, service_id, dic_id, key):
+		content = self._fetch("/service/{}/dictionary/{}/item/{}".format(service_id, dic_id, key))
+		return FastlyDictionaryItem(self, content)
+
+	def delete_dic_item(self, service_id, dic_id, key):
+		content = self._fetch("/service/{}/dictionary/{}/item/{}".format(service_id, dic_id, key), method="DELETE")
+		return self._status(content)
+
 	def _status(self, status):
 		if not isinstance(status, FastlyStatus):
 			status = FastlyStatus(self, status)
@@ -1530,6 +1594,63 @@ class FastlyWordpress(FastlyObject, IServiceVersionObject):
 		"path",
 		"comment",
 	]
+
+
+class FastlyACL(FastlyObject, object):
+	"""An ACL is a named access control list for matching against a client's IP address during VCL processing"""
+	FIELDS = [
+		"id",
+		"name",
+		"version",
+		"service_id",
+		"created_at",
+		"updated_at",
+		"deleted_at",
+	]
+
+
+class FastlyACLEntry(FastlyObject, object):
+	"""An ACL entry holds an IP address with optional subnet to make up an entry in an ACL"""
+	FIELDS = [
+		"ip",
+		"subnet",
+		"acl_id",
+		"negated",
+		"comment",
+		"id",
+		"service_id",
+	]
+
+
+class FastlyDictionary(FastlyObject, object):
+	"""A Dictionary is a table that stores key value pairs accessible to VCL functions during VCL processing"""
+	FIELDS = [
+		"id",
+		"name",
+		"version",
+		"service_id",
+		"created_at",
+		"updated_at",
+		"deleted_at",
+	]
+
+
+class FastlyDictionaryItem(FastlyObject, object):
+	"""A DictionaryItem holds a key and value that make up an entry in a Dictionary"""
+	FIELDS = [
+		"item_key",
+		"item_value",
+		"dictionary_id",
+		"service_id",
+	]
+
+	@property
+	def key(self):
+		return self.item_key
+
+	@property
+	def value(self):
+		return self.item_value
 
 
 def connect(token):
