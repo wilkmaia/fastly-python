@@ -32,7 +32,7 @@ import json
 import re
 import urllib
 
-from version import __version__
+from fastly.version import __version__
 
 FASTLY_SCHEME = "https"
 FASTLY_HOST = "api.fastly.com"
@@ -160,8 +160,8 @@ class FastlyConnection(object):
 			"request_condition": request_condition,
 			"healthcheck": healthcheck,
 			"comment": comment,
-                        "ssl_cert_hostname": ssl_cert_hostname,
-                        "ssl_sni_hostname": ssl_sni_hostname,
+			"ssl_cert_hostname": ssl_cert_hostname,
+			"ssl_sni_hostname": ssl_sni_hostname,
 			"min_tls_version": min_tls_version,
 			"max_tls_version": max_tls_version,
 		}, FastlyBackend.FIELDS)
@@ -263,8 +263,8 @@ class FastlyConnection(object):
 
 	def update_condition(self, service_id, version_number, name_key, **kwargs):
 		"""Updates the specified condition."""
-                if '_type' in kwargs:
-                        kwargs['type'] = kwargs['_type']
+		if '_type' in kwargs:
+			kwargs['type'] = kwargs['_type']
 		body = self._formdata(kwargs, FastlyCondition.FIELDS)
 		content = self._fetch("/service/%s/version/%d/condition/%s" % (service_id, version_number, urllib.quote(name_key, safe='')), method="PUT", body=body)
 		return FastlyCondition(self, content)
@@ -348,8 +348,8 @@ class FastlyConnection(object):
 
 	def update_director(self, service_id, version_number, name_key, **kwargs):
 		"""Update the director for a particular service and version."""
-                if '_type' in kwargs:
-                        kwargs['type'] = kwargs['_type']
+		if '_type' in kwargs:
+			kwargs['type'] = kwargs['_type']
 		body = self._formdata(kwargs, FastlyDirector.FIELDS)
 		content = self._fetch("/service/%s/version/%d/director/%s" % (service_id, version_number, urllib.quote(name_key, safe='')), method="PUT", body=body)
 		return FastlyDirector(self, content)
@@ -488,8 +488,8 @@ class FastlyConnection(object):
 
 	def update_header(self, service_id, version_number, name_key, **kwargs):
 		"""Modifies an existing Header object by name."""
-                if '_type' in kwargs:
-                        kwargs['type'] = kwargs['_type']
+		if '_type' in kwargs:
+			kwargs['type'] = kwargs['_type']
 		body = self._formdata(kwargs, FastlyHeader.FIELDS)
 		content = self._fetch("/service/%s/version/%d/header/%s" % (service_id, version_number, urllib.quote(name_key, safe='')), method="PUT", body=body)
 		return FastlyHeader(self, content)
@@ -984,7 +984,7 @@ class FastlyConnection(object):
 				data[key] = fields[key]
 				if isinstance(data[key], bool):
 					data[key] = str(int(data[key]))
-		return urllib.urlencode(data)
+		return urllib.parse.urlencode(data)
 
 	def _fetch(self, url, method="GET", body=None, headers={}):
 		hdrs = {}
@@ -1025,7 +1025,7 @@ class FastlyConnection(object):
 
 		if payload is None:
 			raise Exception("HTTP Error %d occurred." % status)
-		elif isinstance(payload, basestring):
+		elif isinstance(payload, str):
 			raise Exception("HTTP Error %d occurred. { %s }" % (status, payload))
 		else:
 			payload["status"] = "error"
@@ -1137,16 +1137,16 @@ class FastlyBackend(FastlyObject, IServiceVersionObject):
 		"request_condition",
 		"healthcheck",
 		"comment",
-                "ssl_cert_hostname",
-                "ssl_sni_hostname",
+		"ssl_cert_hostname",
+		"ssl_sni_hostname",
 		"min_tls_version",
 		"max_tls_version",
 	]
 
 	@property
 	def healthcheck(self):
-                if not self.__getattr__('healthcheck'):
-                        return None
+		if not self.__getattr__('healthcheck'):
+			return None
 		return self._conn.get_healthcheck(self.service_id, self.version, self.__getattr__("healthcheck"))
 
 
@@ -1174,7 +1174,7 @@ class FastlyCondition(FastlyObject, IServiceVersionObject):
 		"type",
 		"statement",
 		"priority",
-                "comment",
+		"comment",
 	]
 
 
@@ -1217,7 +1217,7 @@ class FastlyDirector(FastlyObject, IServiceVersionObject, IDateStampedObject):
 		"deleted",
 		"capacity",
 		"comment",
-                "backends",
+		"backends",
 	]
 
 
