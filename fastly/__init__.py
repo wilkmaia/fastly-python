@@ -103,14 +103,9 @@ class FastlyDirectorType(object):
 
 
 class FastlyConnection(object):
-	def __init__(self, api_key):
+	def __init__(self, token):
 		self._session = None
-		self._api_key = api_key
-		self._fully_authed = False
-
-	@property
-	def fully_authed(self):
-		return self._fully_authed
+		self._token = token
 
 	def login(self, user, password):
 		body = self._formdata({
@@ -118,7 +113,6 @@ class FastlyConnection(object):
 			"password": password,
 		}, ["user", "password"])
 		content = self._fetch("/login", method="POST", body=body)
-		self._fully_authed = True
 		return FastlySession(self, content)
 
 	def list_backends(self, service_id, version_number):
@@ -999,10 +993,7 @@ class FastlyConnection(object):
 		print("Fetch: %s %s" % (method, url))
 		if body:
 			print("Body: %s" % body)
-		if self._fully_authed:
-			hdrs["Cookie"] = self._session
-		else:
-			hdrs["Fastly-Key"] = self._api_key
+		hdrs["Fastly-Key"] = self._token
 
 		hdrs["Content-Accept"] = "application/json"
 		hdrs["User-Agent"] = "fastly-python-v%s" % __version__
@@ -1541,8 +1532,6 @@ class FastlyWordpress(FastlyObject, IServiceVersionObject):
 	]
 
 
-def connect(api_key, username=None, password=None):
-	conn = FastlyConnection(api_key)
-	if username is not None and password is not None:
-		conn.login(username, password)
+def connect(token):
+	conn = FastlyConnection(token)
 	return conn
